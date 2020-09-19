@@ -15,10 +15,14 @@ namespace GitSame.Analyzer
     {
         private static Grammars.GrammarBase[] availibleGrammars;
         private static Grammars.GrammarBase commonGrammar;
+        private static T initGrammar<T>() where T : Grammars.GrammarBase, new()
+        {
+            return Grammars.GrammarBase.initInstance<T>();
+        }
         static DescriptionGenerator()
         {
-            availibleGrammars = new Grammars.GrammarBase[] { new Grammars.Java() };
-            commonGrammar = new Grammars.Common();
+            availibleGrammars = new Grammars.GrammarBase[] { initGrammar<Grammars.Java>() };
+            commonGrammar = initGrammar<Grammars.Common>();
         }
         public static List<String> Tokenize(Grammars.GrammarBase grammar, string input)
         {

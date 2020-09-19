@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 
 namespace GitSame.Analyzer.Grammars
 {
@@ -29,6 +31,18 @@ namespace GitSame.Analyzer.Grammars
         public string MathOperators { get; protected set; }
         [DataMember]
         public string SplitRule { get; protected set; }
+        static protected string pathToGrammar;
+
+        public static T initInstance<T>() where T : GrammarBase,new()
+        {
+            T instance = new T();
+            using (FileStream file = new FileStream(pathToGrammar, FileMode.Open, System.IO.FileAccess.Read))
+            {
+                var ser = new DataContractJsonSerializer(instance.GetType());
+                instance = ser.ReadObject(file) as T;
+            }
+            return instance;
+        }
         public abstract List<String> PostTokenizer( string[] tokens);
     }
 }

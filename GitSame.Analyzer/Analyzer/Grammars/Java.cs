@@ -1,36 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace GitSame.Analyzer.Grammars
 {
+    [DataContract]
     class Java : GrammarBase
     {
-        public Java() : base()
+        public Java()
         {
-            Name = "java";
-            Extensions = new List<String> { "java" };
-            Keywords = new List<String> { "abstract", "continue","for","new","switch",
-                                          "assert", "default", "goto", "package", "synchronized",
-                                           "do","if","private","this",
-                                           "break","implements","protected","throw",
-                                           "else","import","public","throws",
-                                           "case","enum","instanceof","return","transient",
-                                           "catch","extends","try",
-                                           "final","interface","static",
-                                           "class","finally","strictfp","volatile",
-                                           "const","native","super","while"};
-            BlockStartRule = "{";
-            BlockEndRule = "}";
-            IdentifierRules = @"^(^\D[_a-zA-Z0-9$]+)$";
-            PrimitiveTypes = new List<string> { "boolean", "int", "short", "double", "byte", "char", "void", "float", "long" };
-            AssignmentStatements = "=";
-            MathOperators = @"[\+-\/*%]";
-            ComparsionOperators = ">=|<=|==|<|>|!=";
-            SplitRule = @"(->|\/\/|\/\*|\*\/|[ {}.()=:;,\n\r<>])";
-
+            pathToGrammar = "../../GrammarFiles/java.json";
         }
         public override List<String> PostTokenizer(string[] tokens)
         {
