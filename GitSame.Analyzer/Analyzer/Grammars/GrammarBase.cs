@@ -10,7 +10,7 @@ namespace GitSame.Analyzer.Grammars
     public abstract class GrammarBase
     {
         [DataMember]
-        public string Name { get; protected set; }
+        public string Name { get; set; }
         [DataMember]
         public List<String> Extensions { get; protected set; }
         [DataMember]

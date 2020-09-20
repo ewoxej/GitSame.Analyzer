@@ -35,9 +35,8 @@ namespace GitSame.Analyzer
             if (grammar == commonGrammar)
             {
                 var fileDescription = new UnknownFileDescription();
-                fileDescription.Language = "unknown";//TODO:place file extension here
-                //var hashedBlocks = HashTokens(tokens);
-                //fileDescription.tokens = hashedBlocks;
+                fileDescription.Language = grammar.Name;
+                fileDescription.HashTokens(tokens);
                 return fileDescription;
             }
             else
@@ -45,7 +44,7 @@ namespace GitSame.Analyzer
                 var fileDescription = new PLLanguageFileDescription();
                 fileDescription.Language = grammar.Name;
                 var rootBlock = fileDescription.Scope;
-                rootBlock.Analyze("global", 0, grammar, tokens);
+                rootBlock.Analyze( 0, grammar, tokens);
                 fileDescription.Scope = rootBlock;
                 return fileDescription;
             }
@@ -73,6 +72,7 @@ namespace GitSame.Analyzer
             string fileExt = Path.GetExtension(pathToFile).Substring(1);//get rid of dot in the beginning
             Grammars.GrammarBase grammar = MatchGrammar(fileExt);
             string input = File.ReadAllText(pathToFile);
+            grammar.Name = fileExt;
             return GenerateDescriptionFromContent(grammar, input);
         }
         public static Grammars.GrammarBase MatchGrammar(string fileExtension)

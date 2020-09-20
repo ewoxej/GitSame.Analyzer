@@ -11,5 +11,9 @@ namespace GitSame.Analyzer.FileDescriptions
     {
         [DataMember]
         public List<string> tokens;
+        public void HashTokens( List<string> tokens )
+        {
+
+        }
     }
 }

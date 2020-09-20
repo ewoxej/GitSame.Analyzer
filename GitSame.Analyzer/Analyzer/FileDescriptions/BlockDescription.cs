@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
@@ -8,10 +9,9 @@ namespace GitSame.Analyzer.FileDescriptions
     [DataContract]
     public class BlockDescription
     {
-        [DataMember]
-        public string BlockName;
-        [DataMember]
         public Dictionary<string, int> IdentifierUsages { get; set; }
+        [DataMember]
+        private List<int> IdentifierUsagesPattern { get; set; }
         [DataMember]
         public Dictionary<string, int> PrimitiveTypeUsages { get; set; }
         [DataMember]
@@ -50,10 +50,8 @@ namespace GitSame.Analyzer.FileDescriptions
             IdentifierUsages = tmp;
         }
 
-        public void Analyze(string blockName, int loopStartPosition, Grammars.GrammarBase grammar, List<string> tokens)
+        public int Analyze(int loopStartPosition, Grammars.GrammarBase grammar, List<string> tokens)
         {
-            string lastIdentifier = "";
-            BlockName = blockName;
             for (int i = loopStartPosition; i < tokens.Count; ++i)
             {
                 if (grammar.Keywords.Contains(tokens[i]))
@@ -61,10 +59,7 @@ namespace GitSame.Analyzer.FileDescriptions
                 else if (grammar.PrimitiveTypes.Contains(tokens[i]))
                     IncrementTypeUsages(tokens[i]);
                 else if (Regex.Match(tokens[i], grammar.IdentifierRules).Success)
-                {
-                    lastIdentifier = tokens[i];
                     IncrementIdentifierUsages(tokens[i]);
-                }
                 else if (Regex.Match(tokens[i], grammar.AssignmentStatements).Success)
                     AssignmentStatements++;
                 else if (Regex.Match(tokens[i], grammar.ComparsionOperators).Success)
@@ -74,11 +69,39 @@ namespace GitSame.Analyzer.FileDescriptions
                 else if (grammar.BlockStartRule == tokens[i])
                 {
                     BlockDescription nestedBlock = new BlockDescription();
-                    nestedBlock.Analyze(lastIdentifier, i + 1, grammar, tokens);
+                    i = nestedBlock.Analyze( i + 1, grammar, tokens);
                     NestedBlocks.Add(nestedBlock);
                 }
                 else if (grammar.BlockEndRule == tokens[i])
-                    return;
+                {
+                    PreSerializeStep();
+                    return i;
+                }
+            }
+            return tokens.Count;
+        }
+
+        private void PreSerializeStep()
+        {
+            IdentifierUsagesPattern = new List<int>();
+            foreach (var i in IdentifierUsages.Values)
+                IdentifierUsagesPattern.Add(i);
+
+            var keys = KeywordUsages.Keys;
+            foreach ( var i in keys.ToArray())
+            {
+                int val = 0;
+                KeywordUsages.TryGetValue(i, out val);
+                if (val < 2)
+                    KeywordUsages.Remove(i);
+            }
+            keys = PrimitiveTypeUsages.Keys;
+            foreach (var i in keys.ToArray())
+            {
+                int val = 0;
+                PrimitiveTypeUsages.TryGetValue(i, out val);
+                if (val < 2)
+                    PrimitiveTypeUsages.Remove(i);
             }
         }
         private static void IncrementKeyUsageInDict(ref Dictionary<string, int> dict, string key)
@@ -87,7 +110,7 @@ namespace GitSame.Analyzer.FileDescriptions
             if (dict.TryGetValue(key, out val))
             {
                 dict.Remove(key);
-                dict.Add(key, val);
+                dict.Add(key, val + 1);
             }
             else
             {
