@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
@@ -94,6 +95,77 @@ namespace GitSame.Analyzer.FileDescriptions
             return tokens.Count;
         }
 
+        public int Compare(BlockDescription block)
+        {
+            if (block.IdentifierUsagesPattern == null)
+                block.PreSerializeStep();
+            if (IdentifierUsagesPattern == null)
+                PreSerializeStep();
+            int idSimilarity = CompareIdPattern(block);
+            int typesSimilarity = CompareDictUsages(PrimitiveTypeUsages, block.PrimitiveTypeUsages);
+            int keywordsSimilarity = CompareDictUsages(KeywordUsages, block.KeywordUsages);
+            int assignmentOps = CompareSomethingCount(AssignmentStatements, block.AssignmentStatements);
+            int mathExpr = CompareSomethingCount(MathExpressions, block.MathExpressions);
+            int compExpr = CompareSomethingCount(CompareExpressions, block.CompareExpressions);
+            int nested = CompareNestedBlocks(block);
+            int similarityRate = idSimilarity + typesSimilarity + keywordsSimilarity + assignmentOps
+                + mathExpr + compExpr + nested;
+            similarityRate /= 7;
+            return similarityRate;
+        }
+        private int CompareIdPattern( BlockDescription block)
+        {
+            if (block.IdentifierUsagesPattern == null || IdentifierUsagesPattern == null)
+                return 0;
+            int similarCount = 0;
+            int minSize = (block.IdentifierUsagesPattern.Count < IdentifierUsagesPattern.Count) ?
+                block.IdentifierUsagesPattern.Count : IdentifierUsagesPattern.Count;
+            for( int i = 0; i< minSize;++i)
+            {
+                if (block.IdentifierUsagesPattern[i] == IdentifierUsagesPattern[i])
+                    similarCount++;
+            }
+            return (similarCount / minSize) * 100;
+        }
+
+        private int CompareNestedBlocks( BlockDescription block )
+        {
+            int average = 0;
+            for( int i=0;i<block.NestedBlocks.Count;++i)
+            {
+                for( int j =0; j<NestedBlocks.Count;++j)
+                {
+                    if( CompareSomethingCount(block.NestedBlocks[i].TokensCount,NestedBlocks[j].TokensCount) > 0.9 )
+                        average += NestedBlocks[j].Compare(block.NestedBlocks[i]);
+                }
+            }
+            int minCount = (block.NestedBlocks.Count > NestedBlocks.Count)? block.NestedBlocks.Count : NestedBlocks.Count;
+            if (minCount == 0)
+                return 100;
+            return average / minCount;
+        }
+        private int CompareSomethingCount( int val1, int val2)
+        {
+            int minValue = (val1 < val2) ? val1 : val2;
+            int maxValue = (val1 > val2) ? val1 : val2;
+            if (maxValue == 0)
+                return 100;
+            return (minValue / maxValue) * 100;
+        }
+        private int CompareDictUsages(Dictionary<string,int> dict1, Dictionary<string,int> dict2 )
+        {
+            int similarCount = 0;
+            foreach (var i in dict1)
+            {
+                int val = 0;
+                dict2.TryGetValue(i.Key, out val);
+                if (val == i.Value)
+                    similarCount++;
+            }
+            if (dict1.Count == 0)
+                return 100;
+            return (similarCount / dict1.Count) * 100;
+        }
         private void PreSerializeStep()
         {
             IdentifierUsagesPattern = new List<int>();

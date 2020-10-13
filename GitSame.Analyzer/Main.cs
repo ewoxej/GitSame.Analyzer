@@ -11,8 +11,9 @@ namespace tsql1
     {
         static void Main(string[] args)
         {
-            var description = DescriptionGenerator.GenerateDescriptionFromFile(@"d:\test.java");
-            DescriptionGenerator.WriteDescriptionToFile(description, @"d:\test_java.json");
+            var d1 = DescriptionGenerator.GenerateDescriptionFromFile(@"d:\test.java");
+            var d2 = DescriptionGenerator.GenerateDescriptionFromFile(@"d:\program.java");
+            System.Console.WriteLine(Comparator.CompareDescriptions(d1, d2));
             System.Console.ReadKey();
         }
 

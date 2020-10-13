@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analyzer\Comparator.cs" />
     <Compile Include="Analyzer\DescriptionGenerator.cs" />
     <Compile Include="Analyzer\FileDescriptions\BlockDescription.cs" />
     <Compile Include="Analyzer\FileDescriptions\BasicFileDescription.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Analyzer\Grammars\Common.cs" />
     <Compile Include="Analyzer\Grammars\GrammarBase.cs" />
     <Compile Include="Analyzer\Grammars\Java.cs" />
+    <Compile Include="Helper.cs" />
     <Compile Include="Main.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

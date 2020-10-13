@@ -75,6 +75,7 @@ namespace GitSame.Analyzer
             grammar.Name = fileExt;
             return GenerateDescriptionFromContent(grammar, input);
         }
+
         public static Grammars.GrammarBase MatchGrammar(string fileExtension)
         {
             foreach (var i in availibleGrammars)

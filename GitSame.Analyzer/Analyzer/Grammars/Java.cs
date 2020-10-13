@@ -20,6 +20,7 @@ namespace GitSame.Analyzer.Grammars
             List<String> listToReturn = new List<String>();
             bool isOneLineComment = false;
             bool isMultiLineComment = false;
+            bool isTextInQuotes = false;
             foreach (var i in tokens)
             {
                 if (i == "//" && !isMultiLineComment)
@@ -30,7 +31,17 @@ namespace GitSame.Analyzer.Grammars
                     isOneLineComment = false;
                 else if (i == @"*\")
                     isMultiLineComment = false;
-                else if (!String.IsNullOrEmpty(i) && i != "\n" && i != "\r" && i != " " && !isMultiLineComment && !isOneLineComment)
+                else if (i.StartsWith("\"") && i.EndsWith("\""))
+                {
+                    isTextInQuotes = false;
+                    continue;
+                }
+                else if (i.StartsWith("\""))
+                    isTextInQuotes = true;
+                else if (i.EndsWith("\""))
+                    isTextInQuotes = false;
+                else if (!String.IsNullOrEmpty(i) && i != "\n" && i != "\r" && i != " " &&
+                    !isMultiLineComment && !isOneLineComment && !isTextInQuotes)
                     listToReturn.Add(i);
             }
             return listToReturn;
