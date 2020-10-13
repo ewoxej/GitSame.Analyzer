@@ -44,7 +44,7 @@ namespace GitSame.Analyzer
                 var fileDescription = new PLLanguageFileDescription();
                 fileDescription.Language = grammar.Name;
                 var rootBlock = fileDescription.Scope;
-                rootBlock.Analyze( 0, grammar, tokens);
+                rootBlock.Analyze( 0, grammar, tokens, 50);
                 fileDescription.Scope = rootBlock;
                 return fileDescription;
             }

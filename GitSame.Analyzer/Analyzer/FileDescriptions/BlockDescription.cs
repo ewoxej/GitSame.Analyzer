@@ -24,6 +24,9 @@ namespace GitSame.Analyzer.FileDescriptions
         public int CompareExpressions { get; set; }
         [DataMember]
         public List<BlockDescription> NestedBlocks { get; set; }
+        [DataMember]
+        public int TokensCount { get; set; }
+
         public BlockDescription()
         {
             IdentifierUsages = new Dictionary<string, int>();
@@ -31,29 +34,31 @@ namespace GitSame.Analyzer.FileDescriptions
             KeywordUsages = new Dictionary<string, int>();
             NestedBlocks = new List<BlockDescription>();
         }
-        public void IncrementKeywordUsages(string keyword)
+        public void IncrementKeywordUsages(string keyword, int increment = 1)
         {
             var tmp = KeywordUsages;
-            IncrementKeyUsageInDict(ref tmp, keyword);
+            IncrementKeyUsageInDict(ref tmp, keyword,increment);
             KeywordUsages = tmp;
         }
-        public void IncrementTypeUsages(string type)
+        public void IncrementTypeUsages(string type, int increment = 1)
         {
             var tmp = PrimitiveTypeUsages;
-            IncrementKeyUsageInDict(ref tmp, type);
+            IncrementKeyUsageInDict(ref tmp, type, increment);
             PrimitiveTypeUsages = tmp;
         }
-        public void IncrementIdentifierUsages(string identifier)
+        public void IncrementIdentifierUsages(string identifier,int increment = 1)
         {
             var tmp = IdentifierUsages;
-            IncrementKeyUsageInDict(ref tmp, identifier);
+            IncrementKeyUsageInDict(ref tmp, identifier,increment);
             IdentifierUsages = tmp;
         }
 
-        public int Analyze(int loopStartPosition, Grammars.GrammarBase grammar, List<string> tokens)
+        public int Analyze(int loopStartPosition, Grammars.GrammarBase grammar, List<string> tokens, int internalTokensLimit )
         {
+            int blockTokensCount = 0;
             for (int i = loopStartPosition; i < tokens.Count; ++i)
             {
+                blockTokensCount++;
                 if (grammar.Keywords.Contains(tokens[i]))
                     IncrementKeywordUsages(tokens[i]);
                 else if (grammar.PrimitiveTypes.Contains(tokens[i]))
@@ -69,11 +74,19 @@ namespace GitSame.Analyzer.FileDescriptions
                 else if (grammar.BlockStartRule == tokens[i])
                 {
                     BlockDescription nestedBlock = new BlockDescription();
-                    i = nestedBlock.Analyze( i + 1, grammar, tokens);
-                    NestedBlocks.Add(nestedBlock);
+                    i = nestedBlock.Analyze( i + 1, grammar, tokens, internalTokensLimit);
+                    if (nestedBlock.TokensCount < internalTokensLimit )
+                    {
+                        IncrementInternalBlockData(nestedBlock);
+                    }
+                    else
+                    {
+                        NestedBlocks.Add(nestedBlock);
+                    }
                 }
                 else if (grammar.BlockEndRule == tokens[i])
                 {
+                    TokensCount = blockTokensCount;
                     PreSerializeStep();
                     return i;
                 }
@@ -104,18 +117,35 @@ namespace GitSame.Analyzer.FileDescriptions
                     PrimitiveTypeUsages.Remove(i);
             }
         }
-        private static void IncrementKeyUsageInDict(ref Dictionary<string, int> dict, string key)
+        private static void IncrementKeyUsageInDict(ref Dictionary<string, int> dict, string key, int incrementValue)
         {
             int val;
             if (dict.TryGetValue(key, out val))
             {
                 dict.Remove(key);
-                dict.Add(key, val + 1);
+                dict.Add(key, val + incrementValue);
             }
             else
             {
-                dict.Add(key, 1);
+                dict.Add(key, incrementValue);
             }
+        }
+
+        private void IncrementInternalBlockData( BlockDescription data )
+        {
+            foreach( var i in data.KeywordUsages )
+                IncrementKeywordUsages(i.Key,i.Value);
+            foreach (var i in data.IdentifierUsages)
+                IncrementIdentifierUsages(i.Key, i.Value);
+            foreach (var i in data.PrimitiveTypeUsages)
+                IncrementTypeUsages(i.Key, i.Value);
+
+            AssignmentStatements += data.AssignmentStatements;
+            MathExpressions += data.MathExpressions;
+            CompareExpressions += data.CompareExpressions;
+            TokensCount += data.TokensCount;
+            foreach (var i in data.NestedBlocks)
+                NestedBlocks.Add(i);
         }
     }
 }
