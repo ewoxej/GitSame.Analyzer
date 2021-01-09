@@ -31,6 +31,14 @@ namespace GitSame.Analyzer
         }
         public static BasicFileDescription GenerateDescriptionFromContent(Grammars.GrammarBase grammar, string content)
         {
+            if( grammar == commonGrammar && content.Length > 4096 )// if unknown file > 4MB
+            {
+                var fileDescription = new UnknownFileDescription();
+                fileDescription.Language = grammar.Name;
+                fileDescription.tokens = new List<string>();
+                fileDescription.tokens.Add(Helper.sha256_hash(content));
+                return fileDescription;
+            }
             var tokens = Tokenize(grammar, content);
             if (grammar == commonGrammar)
             {
@@ -54,23 +62,33 @@ namespace GitSame.Analyzer
         {
             using (FileStream file = new FileStream(filepath, FileMode.Create, System.IO.FileAccess.Write))
             {
-                if ((PLLanguageFileDescription)description != null)
+                try
                 {
                     var ser = new DataContractJsonSerializer(typeof(PLLanguageFileDescription));
                     ser.WriteObject(file, (PLLanguageFileDescription)description);
                 }
-                else
+                catch(InvalidCastException)
                 {
                     var ser = new DataContractJsonSerializer(typeof(UnknownFileDescription));
                     ser.WriteObject(file, (UnknownFileDescription)description);
+
                 }
             }
         }
 
         public static BasicFileDescription GenerateDescriptionFromFile(string pathToFile)
         {
+            var fileInfo = new FileInfo(pathToFile);
             string fileExt = Path.GetExtension(pathToFile).Substring(1);//get rid of dot in the beginning
             Grammars.GrammarBase grammar = MatchGrammar(fileExt);
+            if( grammar == commonGrammar && fileInfo.Length > 10000 )//if unknown file > 10MB
+            {
+                UnknownFileDescription desc = new UnknownFileDescription();
+                desc.tokens = new List<string>();
+                desc.tokens.Add(fileInfo.Length.ToString());
+                desc.tokens.Add(fileInfo.Extension);
+                return desc;
+            }
             string input = File.ReadAllText(pathToFile);
             grammar.Name = fileExt;
             return GenerateDescriptionFromContent(grammar, input);

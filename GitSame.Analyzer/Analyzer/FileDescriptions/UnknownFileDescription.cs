@@ -11,9 +11,11 @@ namespace GitSame.Analyzer.FileDescriptions
     {
         [DataMember]
         public List<string> tokens;
-        public void HashTokens( List<string> tokens )
+        public void HashTokens( List<string> t )
         {
-
+            tokens = new List<string>();
+            foreach (var i in t)
+                tokens.Add(Helper.sha256_hash(i));
         }
     }
 }

@@ -32,16 +32,17 @@ namespace GitSame.Analyzer.Grammars
                     tempStr += i;
                 }
             }
-            for( int i =0;i<listToReturn.Count;++i)
+            List<String> newList = new List<String>();
+            for ( int i =0;i<listToReturn.Count;++i)
             {
                 listToReturn[i] = listToReturn[i].ToLower();
                 if (listToReturn[i].Length > 20)
                 {
-                    listToReturn[i] = listToReturn[i].Substring(0, (listToReturn[i].Length / 2));
-                    listToReturn.Add(listToReturn[i].Substring(listToReturn[i].Length/2));
+                    newList.Add( listToReturn[i].Substring(0, (listToReturn[i].Length / 2)));
+                    newList.Add(listToReturn[i].Substring(listToReturn[i].Length/2));
                 }
             }
-            return listToReturn;
+            return newList;
         }
     }
 }

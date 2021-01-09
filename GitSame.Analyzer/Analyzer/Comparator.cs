@@ -25,15 +25,25 @@ namespace GitSame.Analyzer
 
         static public int CompareDescriptions( BasicFileDescription file1, BasicFileDescription file2 )
         {
-            var plFile1 = (PLLanguageFileDescription)file1;
-            var plFile2 = (PLLanguageFileDescription)file2;
-            if (plFile1 != null && plFile2 != null)
+            try
+            {
+                var plFile1 = (PLLanguageFileDescription)file1;
+                var plFile2 = (PLLanguageFileDescription)file2;
                 return ComparePLLanguageDescriptions(plFile1, plFile2);
-            var unFile1 = (UnknownFileDescription)file1;
-            var unFile2 = (UnknownFileDescription)file2;
-            if (unFile1 != null && unFile2 != null)
-                return CompareUnknownDescriptions(unFile1, unFile2);
-            return 0;
+            }
+            catch (InvalidCastException)
+            {
+                try
+                {
+                    var unFile1 = (UnknownFileDescription)file1;
+                    var unFile2 = (UnknownFileDescription)file2;
+                    return CompareUnknownDescriptions(unFile1, unFile2);
+                }
+                catch(InvalidCastException)
+                {
+                    return 0;
+                }
+            }
         }
 
         static private int ComparePLLanguageDescriptions( PLLanguageFileDescription file1, PLLanguageFileDescription file2 )
@@ -43,8 +53,19 @@ namespace GitSame.Analyzer
 
         static private int CompareUnknownDescriptions(UnknownFileDescription file1, UnknownFileDescription file2)
         {
-            return 0;
-            //TODO implement unknown file comparsion
+            if (file2.tokens.Count == 0 && file1.tokens.Count == 0)
+                return 100;
+            else if (file1.tokens.Count == 0 || file2.tokens.Count == 0 )
+                return 0;
+
+            int minCount = (file1.tokens.Count < file2.tokens.Count) ? file1.tokens.Count : file2.tokens.Count;
+            int similarCount = 0;
+            for( int i =0;i<minCount;++i)
+            {
+                if (file1.tokens[i] == file2.tokens[i])
+                    similarCount++;
+            }
+            return (int)(similarCount / (double)minCount*100);
         }
     }
 }
